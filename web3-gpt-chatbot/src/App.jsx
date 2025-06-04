@@ -4,18 +4,35 @@ import viteLogo from "/vite.svg";
 import "./App.css";
 import { use } from "react";
 import Web3 from "web3";
+import { formatWalletDataForEmbedding } from "./utils/formatData";
 
 const ALCHEMY_KEY = import.meta.env.VITE_ALCHEMY_API_KEY;
 
 function App() {
   const [count, setCount] = useState(0);
   const [wallet, setWallet] = useState("");
+  const [summary, setSummary] = useState("");
   const [data, setData] = useState({
     nfts: [],
     tokens: [],
     transfers: [],
     votes: [],
   });
+  const [query, setQuery] = useState("");
+  const [response, setResponse] = useState("");
+
+
+  const askBot = async () => {
+    const res = await fetch("http://localhost:5000/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ wallet, query }),
+    });
+
+    const data = await res.json();
+    setResponse(data.answer);
+  };
+
 
   const connectWallet = async () => {
     if (window.ethereum) {
@@ -85,6 +102,22 @@ function App() {
     fetchSnapshotVotes();
   }, [wallet]);
 
+
+
+  useEffect(() => {
+    if (!wallet || !data.nfts || !data.tokens || !data.transfers || !data.votes) return;
+    const text = formatWalletDataForEmbedding({
+      wallet,
+      nfts: data.nfts,
+      tokens: data.tokens,
+      transfers: data.transfers,
+      votes: data.votes
+    })
+
+    setSummary(text);
+    console.log(summary, "Summary")
+  }, [])
+
   return (
     <div className="App">
       <h1>GPT Web3 Chatbot</h1>
@@ -102,6 +135,13 @@ function App() {
 
       <h2>🗳️ DAO Votes (Snapshot)</h2>
       <pre>{JSON.stringify(data.votes, null, 2)}</pre>
+      <input
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder="Ask: What did I vote for last month?"
+      />
+      <button onClick={askBot}>Ask</button>
+      <p>🤖 Response: {response}</p>
     </div>
   );
 }
