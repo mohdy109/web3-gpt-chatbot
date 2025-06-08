@@ -2,23 +2,28 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import axios from "axios";
-import { Configuration, OpenAIApi } from "openai"
-import { setupChatbot } from "./chatRoute";
+import OpenAI from "openai"; 
+import { setupChatbot } from "./chatRoute.js";
 
 
 
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-const configuration = new Configuration({ apikey: process.env.OPENAI_API_KEY });
-
-const openai = new OpenAIApi(Configuration);
+const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+  });
+  
 
 const PINECONE_BASE_URL = `https://${process.env.PINECONE_INDEX}-${process.env.PINECONE_ENV}.svc.pinecone.io`;
+
+app.get("/", (req, res) => {
+    res.send("Server is running ✅");
+  });
 
 app.post("/embed", async (req, res) => {
     const { wallet, text } = req.body;
@@ -28,12 +33,11 @@ app.post("/embed", async (req, res) => {
     }
   
     try {
-      // 1. Get embedding
-      const embeddingResponse = await openai.createEmbedding({
-        model: "text-embedding-3-small",
-        input: text,
-      });
-  
+        const embeddingResponse = await openai.embeddings.create({
+          model: "text-embedding-3-small",
+          input: text,
+        });
+    
       const vector = embeddingResponse.data.data[0].embedding;
   
       // 2. Store in Pinecone
@@ -77,6 +81,6 @@ app.post("/embed", async (req, res) => {
     }
   });
 
-  app.listen(port, () => {
-    console.log(`Server running on http://localhost:${port}`);
+  app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
   });
