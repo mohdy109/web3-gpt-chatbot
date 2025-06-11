@@ -9,6 +9,7 @@ import { formatWalletDataForEmbedding } from "./utils/formatData";
 import styled from "styled-components";
 
 const ALCHEMY_KEY = import.meta.env.VITE_ALCHEMY_API_KEY;
+const Api = import.meta.env.VITE_BACKEND_API;
 
 function App() {
   const [count, setCount] = useState(0);
@@ -35,7 +36,7 @@ function App() {
     setQuery("");
 
     try {
-      const res = await fetch("http://localhost:3000/chat", {
+      const res = await fetch(`${Api}/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ wallet, query: finalQuery }),
@@ -93,7 +94,7 @@ function App() {
 
     const sendEmbedding = async () => {
       try {
-        await fetch("http://localhost:3000/embed", {
+        await fetch(`${Api}/embed`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ wallet, text: summary }),
